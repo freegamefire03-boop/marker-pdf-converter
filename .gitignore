@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Kaggle working files (large)
+/kaggle/
+*.zip
+*.pdf
+
+# Local temp files
+ui_output.txt
+*.pyc

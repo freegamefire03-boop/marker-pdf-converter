@@ -1,0 +1,298 @@
+<!-- ============================================================
+     Marker PDF Converter — Config UI
+     Edit this file with any HTML/CSS/JS tool to customize the look.
+     The Python backend reads inputs by their 'data-testid' attributes.
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marker PDF Converter</title>
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card-bg: #fff;
+      --card-shadow: 0 2px 12px rgba(0,0,0,.08);
+      --text: #333;
+      --text-secondary: #666;
+      --text-hint: #888;
+      --border: #ddd;
+      --input-bg: #fff;
+      --status-bg: #f9f9f9;
+      --status-border: #eee;
+      --status-success-bg: #f0fdf4;
+      --status-success-border: #22c55e;
+      --pill-bg: #fff;
+      --pill-active-bg: #eef2ff;
+      --pill-active-border: #6366f1;
+      --btn-secondary-bg: #fff;
+      --btn-secondary-text: #333;
+      --btn-secondary-hover: #f9f9f9;
+    }
+    body.dark {
+      --bg: #1a1a2e;
+      --card-bg: #16213e;
+      --card-shadow: 0 2px 12px rgba(0,0,0,.4);
+      --text: #e0e0e0;
+      --text-secondary: #aaa;
+      --text-hint: #888;
+      --border: #2a2a4a;
+      --input-bg: #0f3460;
+      --status-bg: #0f3460;
+      --status-border: #2a2a4a;
+      --status-success-bg: #0a2a1a;
+      --status-success-border: #22c55e;
+      --pill-bg: transparent;
+      --pill-active-bg: #1a1a3e;
+      --pill-active-border: #818cf8;
+      --btn-secondary-bg: transparent;
+      --btn-secondary-text: #e0e0e0;
+      --btn-secondary-hover: #1a1a3e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      display: flex; justify-content: center; padding: 40px 20px;
+      transition: background .3s, color .3s;
+    }
+    .card {
+      background: var(--card-bg); border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      padding: 32px; max-width: 720px; width: 100%;
+      transition: background .3s, box-shadow .3s;
+    }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-text h1 { font-size: 22px; color: var(--text); }
+    .header-text p.sub { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; cursor: pointer; font-size: 18px; line-height: 1;
+      color: var(--text); transition: background .15s;
+    }
+    .theme-toggle:hover { background: var(--btn-secondary-hover); }
+    .field { margin-bottom: 20px; }
+    label { display: block; font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 4px; }
+    .hint { font-size: 12px; color: var(--text-hint); margin-top: 2px; }
+    .row { display: flex; gap: 16px; }
+    .row > * { flex: 1; }
+    input[type="text"], input[type="number"] {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; outline: none; transition: border-color .2s, background .3s;
+      background: var(--input-bg); color: var(--text);
+    }
+    input:focus { border-color: #6366f1; }
+    .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .radio-group label {
+      display: flex; align-items: center; gap: 4px;
+      font-weight: 400; font-size: 13px; cursor: pointer;
+      padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
+      transition: all .15s; background: var(--pill-bg); color: var(--text);
+    }
+    .radio-group input:checked + span { color: var(--pill-active-border); font-weight: 600; }
+    .radio-group label:has(input:checked) {
+      border-color: var(--pill-active-border); background: var(--pill-active-bg);
+    }
+    .radio-group input { display: none; }
+    .checkbox-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+    }
+    .checkbox-row input { width: 18px; height: 18px; accent-color: #6366f1; }
+    .actions { display: flex; gap: 12px; margin-top: 8px; }
+    .btn-primary {
+      flex: 2; padding: 12px; border: none; border-radius: 8px;
+      background: #6366f1; color: #fff; font-weight: 600; font-size: 15px;
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-secondary {
+      flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--btn-secondary-bg); color: var(--btn-secondary-text);
+      font-weight: 500; font-size: 15px; cursor: pointer; transition: background .15s;
+    }
+    .btn-secondary:hover { background: var(--btn-secondary-hover); }
+    #status {
+      margin-top: 16px; padding: 12px; border-radius: 8px;
+      font-family: monospace; font-size: 13px; background: var(--status-bg);
+      border: 1px solid var(--status-border); min-height: 60px; white-space: pre-wrap;
+      color: var(--text); transition: background .3s, border-color .3s;
+    }
+    #status.success { border-color: var(--status-success-border); background: var(--status-success-bg); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="header-text">
+        <h1>Marker PDF Converter</h1>
+        <p class="sub">Configure settings and click Save &amp; Apply.</p>
+      </div>
+      <button class="theme-toggle" id="btn-theme" title="Toggle dark mode">🌙</button>
+    </div>
+
+    <!-- Mode -->
+    <div class="field" data-field="mode">
+      <label>Processing Mode</label>
+      <div class="radio-group">
+        <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
+        <label><input type="radio" name="mode" value="default"><span>Default</span></label>
+        <label><input type="radio" name="mode" value="split"><span>Split</span></label>
+        <label><input type="radio" name="mode" value="folder"><span>Folder</span></label>
+      </div>
+      <div class="hint">auto = detect from link format</div>
+    </div>
+
+    <!-- Drive links -->
+    <div class="row">
+      <div class="field" data-field="drive_link">
+        <label>Google Drive File Link</label>
+        <input type="text" id="drive_link" placeholder="https://drive.google.com/d/..." />
+      </div>
+      <div class="field" data-field="drive_folder_link">
+        <label>Google Drive Folder Link</label>
+        <input type="text" id="drive_folder_link" placeholder="https://drive.google.com/drive/folders/..." />
+      </div>
+    </div>
+
+    <!-- Batch dir + split page -->
+    <div class="row">
+      <div class="field" data-field="batch_input_dir">
+        <label>Batch Input Directory</label>
+        <input type="text" id="batch_input_dir" value="/kaggle/working/pdf_batch" />
+      </div>
+      <div class="field" data-field="split_at_page">
+        <label>Split at Page</label>
+        <input type="number" id="split_at_page" value="12" min="0" max="200" />
+        <div class="hint">0 = auto half (split mode only)</div>
+      </div>
+    </div>
+
+    <!-- ZIP name + page markers -->
+    <div class="row">
+      <div class="field" data-field="zip_name">
+        <label>Output ZIP Name</label>
+        <input type="text" id="zip_name" value="output" />
+      </div>
+      <div class="checkbox-row" data-field="add_page_markers">
+        <input type="checkbox" id="add_page_markers" />
+        <label for="add_page_markers">Add Page Markers</label>
+      </div>
+    </div>
+
+    <!-- GitHub token -->
+    <div class="field" data-field="github_token" style="margin-top: 8px;">
+      <label>GitHub Token</label>
+      <input type="password" id="github_token" placeholder="ghp_... or left empty" />
+      <div class="hint">For auto-push to GitHub (Cell 9). Leave empty to skip.</div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="actions">
+      <button class="btn-primary" id="btn-save">Save &amp; Apply</button>
+      <button class="btn-secondary" id="btn-reset">Reset to Defaults</button>
+    </div>
+
+    <!-- Status -->
+    <div id="status">Ready.</div>
+  </div>
+
+  <script>
+    // ============================================================
+    // Dark mode toggle
+    // ============================================================
+    function setTheme(dark) {
+      document.body.classList.toggle("dark", dark);
+      document.getElementById("btn-theme").textContent = dark ? "☀️" : "🌙";
+      localStorage.setItem("dark-mode", dark);
+    }
+    if (localStorage.getItem("dark-mode") === "true") setTheme(true);
+
+    document.getElementById("btn-theme").addEventListener("click", () => {
+      setTheme(!document.body.classList.contains("dark"));
+    });
+
+    // ============================================================
+    // API calls
+    const API_SAVE  = "/api/save";
+    const API_LOAD  = "/api/load";
+    const API_RESET = "/api/reset";
+
+    function getValues() {
+      return {
+        mode: document.querySelector('input[name="mode"]:checked').value,
+        split_at_page: parseInt(document.getElementById("split_at_page").value) || 0,
+        batch_input_dir: document.getElementById("batch_input_dir").value,
+        drive_link: document.getElementById("drive_link").value,
+        drive_folder_link: document.getElementById("drive_folder_link").value,
+        zip_name: document.getElementById("zip_name").value,
+        add_page_markers: document.getElementById("add_page_markers").checked,
+        github_token: document.getElementById("github_token").value,
+      };
+    }
+
+    function setValues(v) {
+      const radio = document.querySelector(`input[name="mode"][value="${v.mode}"]`);
+      if (radio) radio.checked = true;
+      document.getElementById("split_at_page").value = v.split_at_page;
+      document.getElementById("batch_input_dir").value = v.batch_input_dir;
+      document.getElementById("drive_link").value = v.drive_link || "";
+      document.getElementById("drive_folder_link").value = v.drive_folder_link || "";
+      document.getElementById("zip_name").value = v.zip_name;
+      document.getElementById("add_page_markers").checked = v.add_page_markers;
+      document.getElementById("github_token").value = v.github_token || "";
+    }
+
+    function setStatus(msg, ok) {
+      const el = document.getElementById("status");
+      el.textContent = msg;
+      el.className = ok ? "success" : "";
+    }
+
+    // Load config on page load
+    async function loadConfig() {
+      try {
+        const res = await fetch(API_LOAD);
+        const data = await res.json();
+        if (data && typeof data === "object") setValues(data);
+      } catch { /* defaults already set */ }
+    }
+
+    // Save
+    document.getElementById("btn-save").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-save");
+      btn.disabled = true; btn.textContent = "Saving...";
+      try {
+        const vals = getValues();
+        const res = await fetch(API_SAVE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(vals),
+        });
+        const result = await res.json();
+        const msg = result.message || "Saved.";
+        setStatus(msg, true);
+      } catch (e) {
+        setStatus("Error: " + e.message, false);
+      } finally {
+        btn.disabled = false; btn.textContent = "Save & Apply";
+      }
+    });
+
+    // Reset
+    document.getElementById("btn-reset").addEventListener("click", async () => {
+      try {
+        const res = await fetch(API_RESET, { method: "POST" });
+        const data = await res.json();
+        if (data && typeof data === "object") setValues(data);
+        setStatus("Reset to defaults. Click Save & Apply to persist.", true);
+      } catch (e) {
+        setStatus("Error: " + e.message, false);
+      }
+    });
+
+    loadConfig();
+  </script>
+</body>
+</html>
