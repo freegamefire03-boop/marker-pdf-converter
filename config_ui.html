@@ -9,193 +9,369 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Marker PDF Converter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f5f5f5;
-      --card-bg: #fff;
-      --card-shadow: 0 2px 12px rgba(0,0,0,.08);
-      --text: #333;
-      --text-secondary: #666;
-      --text-hint: #888;
-      --border: #ddd;
-      --input-bg: #fff;
-      --status-bg: #f9f9f9;
-      --status-border: #eee;
-      --status-success-bg: #f0fdf4;
-      --status-success-border: #22c55e;
-      --pill-bg: #fff;
-      --pill-active-bg: #eef2ff;
-      --pill-active-border: #6366f1;
-      --btn-secondary-bg: #fff;
-      --btn-secondary-text: #333;
-      --btn-secondary-hover: #f9f9f9;
+      --bg: #eae6db;
+      --bg-grain: rgba(30,28,20,.035);
+      --card-bg: #fffdf8;
+      --card-shadow: 0 1px 2px rgba(30,25,15,.04), 0 12px 32px -12px rgba(30,25,15,.18);
+      --ink: #1e2233;
+      --ink-soft: #62667a;
+      --ink-hint: #93968f;
+      --border: #ddd6c4;
+      --input-bg: #fffdf8;
+      --status-bg: #f4f0e4;
+      --status-border: #e3ddc9;
+      --status-success-bg: #eef8ee;
+      --status-success-border: #3f9142;
+      --pill-bg: #fffdf8;
+      --pill-active-bg: #fff3c4;
+      --pill-active-border: #cc9a06;
+      --btn-secondary-bg: #fffdf8;
+      --btn-secondary-text: #1e2233;
+      --btn-secondary-hover: #f4f0e4;
+      --accent: #ffd23f;
+      --accent-ink: #3d2fc4;
+      --accent-ink-hover: #2f22a0;
+      --tape: #f3d9536b;
+      --mark-blend: multiply;
+      --mark-opacity: .55;
+      --scrollbar: #d8d0ba;
     }
     body.dark {
-      --bg: #1a1a2e;
-      --card-bg: #16213e;
-      --card-shadow: 0 2px 12px rgba(0,0,0,.4);
-      --text: #e0e0e0;
-      --text-secondary: #aaa;
-      --text-hint: #888;
-      --border: #2a2a4a;
-      --input-bg: #0f3460;
-      --status-bg: #0f3460;
-      --status-border: #2a2a4a;
-      --status-success-bg: #0a2a1a;
-      --status-success-border: #22c55e;
+      --bg: #111421;
+      --bg-grain: rgba(255,255,255,.02);
+      --card-bg: #171b2b;
+      --card-shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 20px 48px -16px rgba(0,0,0,.65);
+      --ink: #eae7dd;
+      --ink-soft: #9a9db3;
+      --ink-hint: #6c6f85;
+      --border: #2a2e44;
+      --input-bg: #0f1220;
+      --status-bg: #0f1220;
+      --status-border: #262a40;
+      --status-success-bg: #0e2318;
+      --status-success-border: #34a853;
       --pill-bg: transparent;
-      --pill-active-bg: #1a1a3e;
-      --pill-active-border: #818cf8;
+      --pill-active-bg: #2a2410;
+      --pill-active-border: #ffd23f;
       --btn-secondary-bg: transparent;
-      --btn-secondary-text: #e0e0e0;
-      --btn-secondary-hover: #1a1a3e;
+      --btn-secondary-text: #eae7dd;
+      --btn-secondary-hover: #1d2136;
+      --accent: #ffd23f;
+      --accent-ink: #8a7bff;
+      --accent-ink-hover: #a294ff;
+      --tape: #ffd23f2e;
+      --mark-blend: screen;
+      --mark-opacity: .22;
+      --scrollbar: #2a2e44;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scrollbar-color: var(--scrollbar) transparent; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      display: flex; justify-content: center; padding: 40px 20px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background:
+        radial-gradient(ellipse 900px 500px at 15% -10%, var(--bg-grain), transparent),
+        var(--bg);
+      color: var(--ink);
+      display: flex; justify-content: center; padding: 56px 20px;
       transition: background .3s, color .3s;
+      min-height: 100vh;
     }
+
+    .stage {
+      max-width: 720px; width: 100%;
+    }
+
+    /* ---------- Step rail: reflects the page's real order (config -> apply -> download) ---------- */
+    .step-rail {
+      display: flex; gap: 6px; margin-bottom: 14px; padding: 0 4px;
+    }
+    .step-rail .step {
+      flex: 1; display: flex; align-items: baseline; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .04em;
+      color: var(--ink-hint); padding-bottom: 8px; border-bottom: 2px solid var(--border);
+    }
+    .step-rail .step b { color: var(--ink-soft); font-weight: 700; }
+    .step-rail .step.is-current { color: var(--accent-ink); border-bottom-color: var(--accent); }
+    .step-rail .step.is-current b { color: var(--accent-ink); }
+
+    /* ---------- Card ---------- */
     .card {
-      background: var(--card-bg); border-radius: 12px;
+      background: var(--card-bg); border-radius: 14px;
       box-shadow: var(--card-shadow);
-      padding: 32px; max-width: 720px; width: 100%;
-      transition: background .3s, box-shadow .3s;
+      border: 1px solid var(--border);
+      padding: 36px 34px 32px; width: 100%;
+      position: relative; overflow: visible;
+      transition: background .3s, box-shadow .3s, border-color .3s;
     }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .header-text h1 { font-size: 22px; color: var(--text); }
-    .header-text p.sub { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+    /* washi-tape corner accent, ties the "paper" motif to the card */
+    .card::before {
+      content: "";
+      position: absolute; top: -14px; left: 34px;
+      width: 74px; height: 26px;
+      background: var(--tape);
+      border: 1px solid rgba(0,0,0,.04);
+      transform: rotate(-3.5deg);
+      box-shadow: 0 2px 4px rgba(0,0,0,.08);
+      pointer-events: none;
+    }
+
+    .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .header-text h1 {
+      font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px;
+      color: var(--ink); letter-spacing: -0.01em; line-height: 1.15;
+    }
+    .header-text h1 .mark {
+      position: relative; display: inline-block;
+    }
+    .header-text h1 .mark::before {
+      content: "";
+      position: absolute; left: -3px; right: -4px; bottom: 1px; height: 13px;
+      background: var(--accent);
+      opacity: var(--mark-opacity); mix-blend-mode: var(--mark-blend);
+      border-radius: 3px 8px 5px 9px / 7px 4px 8px 3px;
+      transform: rotate(-1deg);
+      z-index: 0;
+    }
+    .header-text h1 .mark span { position: relative; z-index: 1; }
+    .header-text p.sub { color: var(--ink-soft); font-size: 13.5px; margin-top: 6px; }
+
     .theme-toggle {
-      background: none; border: 1px solid var(--border); border-radius: 8px;
-      padding: 8px 10px; cursor: pointer; font-size: 18px; line-height: 1;
-      color: var(--text); transition: background .15s;
+      flex-shrink: 0;
+      background: var(--pill-bg); border: 1px solid var(--border); border-radius: 20px;
+      padding: 6px; cursor: pointer; font-size: 15px; line-height: 1;
+      color: var(--ink); transition: background .15s, border-color .15s;
+      width: 52px; height: 30px; display: flex; align-items: center;
+      justify-content: flex-start;
     }
-    .theme-toggle:hover { background: var(--btn-secondary-hover); }
-    .field { margin-bottom: 20px; }
-    label { display: block; font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 4px; }
-    .hint { font-size: 12px; color: var(--text-hint); margin-top: 2px; }
+    .theme-toggle .knob {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      font-size: 11px; transition: transform .25s cubic-bezier(.4,0,.2,1);
+    }
+    body.dark .theme-toggle .knob { transform: translateX(20px); }
+    .theme-toggle:hover { border-color: var(--accent-ink); }
+
+    .field { margin-bottom: 22px; }
+    label {
+      display: block; font-weight: 600; font-size: 12.5px; color: var(--ink);
+      margin-bottom: 6px; letter-spacing: .01em;
+    }
+    .hint { font-size: 11.5px; color: var(--ink-hint); margin-top: 5px; }
     .row { display: flex; gap: 16px; }
-    .row > * { flex: 1; }
-    input[type="text"], input[type="number"] {
-      width: 100%; padding: 10px 12px;
-      border: 1px solid var(--border); border-radius: 8px;
-      font-size: 14px; outline: none; transition: border-color .2s, background .3s;
-      background: var(--input-bg); color: var(--text);
+    .row > * { flex: 1; min-width: 0; }
+
+    input[type="text"], input[type="number"], input[type="password"] {
+      width: 100%; padding: 10px 13px;
+      border: 1px solid var(--border); border-radius: 9px;
+      font-size: 14px; font-family: inherit; outline: none;
+      transition: border-color .15s, background .3s, box-shadow .15s;
+      background: var(--input-bg); color: var(--ink);
     }
-    input:focus { border-color: #6366f1; }
-    .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    input::placeholder { color: var(--ink-hint); }
+    input:focus-visible, .radio-group label:has(input:focus-visible) {
+      border-color: var(--accent-ink);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-ink) 18%, transparent);
+    }
+    input:-webkit-autofill,
+    input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
+      -webkit-text-fill-color: var(--ink) !important;
+    }
+
+    /* ---------- Mode pills styled like torn paper tabs ---------- */
+    .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
     .radio-group label {
-      display: flex; align-items: center; gap: 4px;
-      font-weight: 400; font-size: 13px; cursor: pointer;
-      padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px;
-      transition: all .15s; background: var(--pill-bg); color: var(--text);
+      display: flex; align-items: center; gap: 5px;
+      font-weight: 500; font-size: 13px; cursor: pointer;
+      padding: 7px 16px; border: 1px solid var(--border); border-radius: 8px;
+      transition: transform .15s, border-color .15s, background .15s;
+      background: var(--pill-bg); color: var(--ink-soft);
     }
-    .radio-group input:checked + span { color: var(--pill-active-border); font-weight: 600; }
+    .radio-group label:nth-child(1) { transform: rotate(-0.6deg); }
+    .radio-group label:nth-child(2) { transform: rotate(0.4deg); }
+    .radio-group label:nth-child(3) { transform: rotate(-0.3deg); }
+    .radio-group input:checked + span { color: var(--accent-ink); font-weight: 700; }
     .radio-group label:has(input:checked) {
       border-color: var(--pill-active-border); background: var(--pill-active-bg);
+      transform: rotate(0deg) translateY(-1px);
     }
+    .radio-group label:hover { border-color: var(--ink-hint); }
     .radio-group input { display: none; }
+
     .checkbox-row {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 9px; margin-bottom: 22px;
     }
-    .checkbox-row input { width: 18px; height: 18px; accent-color: #6366f1; }
-    .actions { display: flex; gap: 12px; margin-top: 8px; }
+    .checkbox-row input { width: 18px; height: 18px; accent-color: var(--accent-ink); cursor: pointer; }
+    .checkbox-row label { margin-bottom: 0; font-weight: 500; cursor: pointer; }
+
+    .actions { display: flex; gap: 12px; margin-top: 6px; }
     .btn-primary {
-      flex: 2; padding: 12px; border: none; border-radius: 8px;
-      background: #6366f1; color: #fff; font-weight: 600; font-size: 15px;
-      cursor: pointer; transition: background .15s;
+      flex: 2; padding: 12px; border: none; border-radius: 9px;
+      background: var(--accent-ink); color: #fff; font-weight: 600; font-size: 14.5px;
+      cursor: pointer; transition: background .15s, transform .1s;
+      font-family: inherit;
     }
-    .btn-primary:hover { background: #4f46e5; }
+    .btn-primary:hover { background: var(--accent-ink-hover); }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-primary:disabled { opacity: .6; cursor: default; }
     .btn-secondary {
-      flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+      flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 9px;
       background: var(--btn-secondary-bg); color: var(--btn-secondary-text);
-      font-weight: 500; font-size: 15px; cursor: pointer; transition: background .15s;
+      font-weight: 500; font-size: 14.5px; cursor: pointer; transition: background .15s;
+      font-family: inherit;
     }
     .btn-secondary:hover { background: var(--btn-secondary-hover); }
+
     #status {
-      margin-top: 16px; padding: 12px; border-radius: 8px;
-      font-family: monospace; font-size: 13px; background: var(--status-bg);
-      border: 1px solid var(--status-border); min-height: 60px; white-space: pre-wrap;
-      color: var(--text); transition: background .3s, border-color .3s;
+      margin-top: 18px; padding: 13px 14px; border-radius: 9px;
+      font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--status-bg);
+      border: 1px dashed var(--status-border); min-height: 54px; white-space: pre-wrap;
+      color: var(--ink-soft); transition: background .3s, border-color .3s, color .3s;
     }
-    #status.success { border-color: var(--status-success-border); background: var(--status-success-bg); }
+    #status.success { border-style: solid; border-color: var(--status-success-border); background: var(--status-success-bg); color: var(--ink); }
+    #status::before { content: "$ "; color: var(--ink-hint); }
+    #status.success::before { content: "✓ "; color: var(--status-success-border); }
+
+    .downloads { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--border); }
+    .downloads h3 {
+      font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--ink-soft); margin-bottom: 10px; display: flex; gap: 10px; align-items: center;
+    }
+    .downloads h3 button {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      cursor: pointer; font-size: 11px; padding: 3px 9px; color: var(--ink-soft);
+      font-family: inherit; letter-spacing: normal; text-transform: none;
+      transition: background .15s;
+    }
+    .downloads h3 button:hover { background: var(--btn-secondary-hover); }
+    .file-list { list-style: none; }
+    .file-list li {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 12px; border-radius: 8px; background: var(--status-bg);
+      border: 1px solid var(--status-border);
+      margin-bottom: 7px; font-size: 13px; color: var(--ink);
+    }
+    .file-list li span { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+    .file-list li a {
+      background: var(--accent-ink); color: #fff; text-decoration: none;
+      padding: 5px 13px; border-radius: 6px; font-size: 11.5px; font-weight: 600;
+      letter-spacing: .02em; transition: background .15s;
+    }
+    .file-list li a:hover { background: var(--accent-ink-hover); }
+    .file-list .no-files { color: var(--ink-hint); font-style: italic; padding: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+    footer.note {
+      text-align: center; margin-top: 18px; font-size: 11.5px; color: var(--ink-hint);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @media (max-width: 560px) {
+      .row { flex-direction: column; gap: 0; }
+      .step-rail .step span.step-label { display: none; }
+      .card { padding: 28px 20px 24px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition-duration: .001ms !important; animation-duration: .001ms !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="header">
-      <div class="header-text">
-        <h1>Marker PDF Converter</h1>
-        <p class="sub">Configure settings and click Save &amp; Apply.</p>
+  <div class="stage">
+    <nav class="step-rail" aria-hidden="true">
+      <div class="step is-current"><b>01</b><span class="step-label">Configure</span></div>
+      <div class="step"><b>02</b><span class="step-label">Save &amp; apply</span></div>
+      <div class="step"><b>03</b><span class="step-label">Download</span></div>
+    </nav>
+
+    <div class="card">
+      <div class="header">
+        <div class="header-text">
+          <h1><span class="mark"><span>Marker</span></span> PDF Converter</h1>
+          <p class="sub">Configure settings and click Save &amp; Apply.</p>
+        </div>
+        <button class="theme-toggle" id="btn-theme" title="Toggle dark mode">
+          <span class="knob">🌙</span>
+        </button>
       </div>
-      <button class="theme-toggle" id="btn-theme" title="Toggle dark mode">🌙</button>
+
+      <!-- Mode -->
+      <div class="field" data-field="mode" style="margin-top: 24px;">
+        <label>Processing Mode</label>
+        <div class="radio-group">
+          <label><input type="radio" name="mode" value="single" checked><span>Single</span></label>
+          <label><input type="radio" name="mode" value="split"><span>Split</span></label>
+          <label><input type="radio" name="mode" value="folder"><span>Folder</span></label>
+        </div>
+      </div>
+
+      <!-- Drive links -->
+      <div class="row" id="row-drive-links">
+        <div class="field" data-field="drive_link" id="field-drive-link">
+          <label>Google Drive File Link</label>
+          <input type="text" id="drive_link" placeholder="https://drive.google.com/d/..." />
+        </div>
+        <div class="field" data-field="drive_folder_link" id="field-folder-link">
+          <label>Google Drive Folder Link</label>
+          <input type="text" id="drive_folder_link" placeholder="https://drive.google.com/drive/folders/..." />
+        </div>
+      </div>
+
+      <!-- Split page + ZIP name -->
+      <div class="row">
+        <div class="field" data-field="split_at_page" id="field-split-page">
+          <label>Split at Page</label>
+          <input type="number" id="split_at_page" value="12" min="0" max="200" />
+          <div class="hint">0 = auto half (split mode only)</div>
+        </div>
+      </div>
+
+      <!-- ZIP name + page markers -->
+      <div class="row">
+        <div class="field" data-field="zip_name">
+          <label>Output ZIP Name</label>
+          <input type="text" id="zip_name" value="output" />
+        </div>
+        <div class="checkbox-row" data-field="add_page_markers">
+          <input type="checkbox" id="add_page_markers" />
+          <label for="add_page_markers">Add Page Markers</label>
+        </div>
+      </div>
+
+      <!-- GitHub token -->
+      <div class="field" data-field="github_token" style="margin-top: 4px;">
+        <label>GitHub Token</label>
+        <input type="password" id="github_token" placeholder="ghp_... or left empty" />
+        <div class="hint">For auto-push to GitHub (Cell 9). Leave empty to skip.</div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="actions">
+        <button class="btn-primary" id="btn-save">Save &amp; Apply</button>
+        <button class="btn-secondary" id="btn-reset">Reset to Defaults</button>
+      </div>
+
+      <!-- Status -->
+      <div id="status">Ready.</div>
+
+      <!-- Downloads -->
+      <div class="downloads">
+        <h3>
+          Downloads
+          <button id="btn-refresh-files">Refresh</button>
+        </h3>
+        <ul class="file-list" id="file-list">
+          <li class="no-files">No output files yet. Run the notebook to generate them.</li>
+        </ul>
+      </div>
     </div>
 
-    <!-- Mode -->
-    <div class="field" data-field="mode">
-      <label>Processing Mode</label>
-      <div class="radio-group">
-        <label><input type="radio" name="mode" value="auto" checked><span>Auto</span></label>
-        <label><input type="radio" name="mode" value="default"><span>Default</span></label>
-        <label><input type="radio" name="mode" value="split"><span>Split</span></label>
-        <label><input type="radio" name="mode" value="folder"><span>Folder</span></label>
-      </div>
-      <div class="hint">auto = detect from link format</div>
-    </div>
-
-    <!-- Drive links -->
-    <div class="row">
-      <div class="field" data-field="drive_link">
-        <label>Google Drive File Link</label>
-        <input type="text" id="drive_link" placeholder="https://drive.google.com/d/..." />
-      </div>
-      <div class="field" data-field="drive_folder_link">
-        <label>Google Drive Folder Link</label>
-        <input type="text" id="drive_folder_link" placeholder="https://drive.google.com/drive/folders/..." />
-      </div>
-    </div>
-
-    <!-- Batch dir + split page -->
-    <div class="row">
-      <div class="field" data-field="batch_input_dir">
-        <label>Batch Input Directory</label>
-        <input type="text" id="batch_input_dir" value="/kaggle/working/pdf_batch" />
-      </div>
-      <div class="field" data-field="split_at_page">
-        <label>Split at Page</label>
-        <input type="number" id="split_at_page" value="12" min="0" max="200" />
-        <div class="hint">0 = auto half (split mode only)</div>
-      </div>
-    </div>
-
-    <!-- ZIP name + page markers -->
-    <div class="row">
-      <div class="field" data-field="zip_name">
-        <label>Output ZIP Name</label>
-        <input type="text" id="zip_name" value="output" />
-      </div>
-      <div class="checkbox-row" data-field="add_page_markers">
-        <input type="checkbox" id="add_page_markers" />
-        <label for="add_page_markers">Add Page Markers</label>
-      </div>
-    </div>
-
-    <!-- GitHub token -->
-    <div class="field" data-field="github_token" style="margin-top: 8px;">
-      <label>GitHub Token</label>
-      <input type="password" id="github_token" placeholder="ghp_... or left empty" />
-      <div class="hint">For auto-push to GitHub (Cell 9). Leave empty to skip.</div>
-    </div>
-
-    <!-- Buttons -->
-    <div class="actions">
-      <button class="btn-primary" id="btn-save">Save &amp; Apply</button>
-      <button class="btn-secondary" id="btn-reset">Reset to Defaults</button>
-    </div>
-
-    <!-- Status -->
-    <div id="status">Ready.</div>
+    <footer class="note">marker · pdf → markdown, split, and ship</footer>
   </div>
 
   <script>
@@ -204,7 +380,7 @@
     // ============================================================
     function setTheme(dark) {
       document.body.classList.toggle("dark", dark);
-      document.getElementById("btn-theme").textContent = dark ? "☀️" : "🌙";
+      document.querySelector("#btn-theme .knob").textContent = dark ? "☀️" : "🌙";
       localStorage.setItem("dark-mode", dark);
     }
     if (localStorage.getItem("dark-mode") === "true") setTheme(true);
@@ -212,6 +388,22 @@
     document.getElementById("btn-theme").addEventListener("click", () => {
       setTheme(!document.body.classList.contains("dark"));
     });
+
+    // ============================================================
+    // Show/hide fields based on mode
+    function updateVisibility(mode) {
+      const showDrive = mode === "single" || mode === "split";
+      const showFolder = mode === "folder";
+      const showSplit = mode === "split";
+      document.getElementById("field-drive-link").style.display = showDrive ? "" : "none";
+      document.getElementById("field-folder-link").style.display = showFolder ? "" : "none";
+      document.getElementById("field-split-page").style.display = showSplit ? "" : "none";
+    }
+
+    document.querySelectorAll('input[name="mode"]').forEach(el => {
+      el.addEventListener("change", () => updateVisibility(document.querySelector('input[name="mode"]:checked').value));
+    });
+    updateVisibility("single");
 
     // ============================================================
     // API calls
@@ -223,7 +415,6 @@
       return {
         mode: document.querySelector('input[name="mode"]:checked').value,
         split_at_page: parseInt(document.getElementById("split_at_page").value) || 0,
-        batch_input_dir: document.getElementById("batch_input_dir").value,
         drive_link: document.getElementById("drive_link").value,
         drive_folder_link: document.getElementById("drive_folder_link").value,
         zip_name: document.getElementById("zip_name").value,
@@ -236,7 +427,6 @@
       const radio = document.querySelector(`input[name="mode"][value="${v.mode}"]`);
       if (radio) radio.checked = true;
       document.getElementById("split_at_page").value = v.split_at_page;
-      document.getElementById("batch_input_dir").value = v.batch_input_dir;
       document.getElementById("drive_link").value = v.drive_link || "";
       document.getElementById("drive_folder_link").value = v.drive_folder_link || "";
       document.getElementById("zip_name").value = v.zip_name;
@@ -255,7 +445,10 @@
       try {
         const res = await fetch(API_LOAD);
         const data = await res.json();
-        if (data && typeof data === "object") setValues(data);
+        if (data && typeof data === "object") {
+          setValues(data);
+          updateVisibility(data.mode || "single");
+        }
       } catch { /* defaults already set */ }
     }
 
@@ -293,6 +486,32 @@
     });
 
     loadConfig();
+
+    // ============================================================
+    // Downloads / file listing
+    const API_FILES = "/api/files";
+    const DOWNLOAD_BASE = "/api/download/";
+
+    async function refreshFiles() {
+      const list = document.getElementById("file-list");
+      list.innerHTML = '<li class="no-files">Loading...</li>';
+      try {
+        const res = await fetch(API_FILES);
+        const data = await res.json();
+        if (!data.files || data.files.length === 0) {
+          list.innerHTML = '<li class="no-files">No output files yet.</li>';
+          return;
+        }
+        list.innerHTML = data.files.map(f =>
+          `<li><span>${f.name} (${f.size})</span><a href="${DOWNLOAD_BASE}${f.name}" download>Download</a></li>`
+        ).join("");
+      } catch {
+        list.innerHTML = '<li class="no-files">Could not fetch file list.</li>';
+      }
+    }
+
+    document.getElementById("btn-refresh-files").addEventListener("click", refreshFiles);
+    refreshFiles();
   </script>
 </body>
 </html>
