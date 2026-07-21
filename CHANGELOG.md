@@ -3,6 +3,10 @@
 All notable changes to this project are logged here, newest first.
 
 ## 2026-07-21
+- Added: Zero-intervention flow — Cell 4 now saves tunnel URL to `.tunnel_url`; Cell 5 waits in a loop until user configures a valid Drive link via the UI, then auto-proceeds
+- Changed: Cell 5 wait loop reads saved tunnel URL and re-displays it; no need to run cells in two batches
+
+## 2026-07-21
 - Changed: Replaced ngrok with Cloudflare Tunnel (cloudflared) in Cell 4 — no API key required, uses trycloudflare.com free tunnel
 - Changed: Updated Cell 4 comment and tunnel code accordingly
 - Removed: All ngrok/pyngrok dependencies and NGROK_AUTH_TOKEN references
