@@ -48,7 +48,6 @@ def load_config():
             saved = json.load(f)
         cfg = DEFAULTS.copy()
         cfg.update({k: v for k, v in saved.items() if k in DEFAULTS})
-        # Migrate old mode values
         if cfg.get("mode") in ("auto", "default"):
             cfg["mode"] = "single"
         return cfg
@@ -135,6 +134,17 @@ async def download_file(filename: str):
     if not os.path.isfile(filepath):
         return HTMLResponse("File not found", status_code=404)
     return FileResponse(filepath, filename=filename)
+
+
+# ── Progress Status ────────────────────────────────────────────────────────
+
+@app.get("/api/status")
+async def get_status():
+    status_path = os.path.join(CONFIG_DIR, "status.json")
+    if os.path.exists(status_path):
+        with open(status_path) as f:
+            return json.load(f)
+    return {"view": "settings", "progress": 0, "step": "Configure your settings below.", "elapsed": 0}
 
 
 # ── Main ──────────────────────────────────────────────────────────────────

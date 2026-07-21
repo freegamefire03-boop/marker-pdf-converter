@@ -40,6 +40,11 @@
       --mark-blend: multiply;
       --mark-opacity: .55;
       --scrollbar: #d8d0ba;
+      --stage-done: #34a853;
+      --stage-current: #3d2fc4;
+      --stage-pending: #d8d0ba;
+      --progress-track: #e3ddc9;
+      --progress-fill: #3d2fc4;
     }
     body.dark {
       --bg: #111421;
@@ -68,6 +73,11 @@
       --mark-blend: screen;
       --mark-opacity: .22;
       --scrollbar: #2a2e44;
+      --stage-done: #34a853;
+      --stage-current: #8a7bff;
+      --stage-pending: #3a3e55;
+      --progress-track: #2a2e44;
+      --progress-fill: #8a7bff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scrollbar-color: var(--scrollbar) transparent; }
@@ -86,7 +96,7 @@
       max-width: 720px; width: 100%;
     }
 
-    /* ---------- Step rail: reflects the page's real order (config -> apply -> download) ---------- */
+    /* ---------- Step rail reflects current view ---------- */
     .step-rail {
       display: flex; gap: 6px; margin-bottom: 14px; padding: 0 4px;
     }
@@ -94,10 +104,13 @@
       flex: 1; display: flex; align-items: baseline; gap: 6px;
       font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .04em;
       color: var(--ink-hint); padding-bottom: 8px; border-bottom: 2px solid var(--border);
+      transition: color .3s, border-color .3s;
     }
     .step-rail .step b { color: var(--ink-soft); font-weight: 700; }
     .step-rail .step.is-current { color: var(--accent-ink); border-bottom-color: var(--accent); }
     .step-rail .step.is-current b { color: var(--accent-ink); }
+    .step-rail .step.is-done { color: var(--stage-done); border-bottom-color: var(--stage-done); }
+    .step-rail .step.is-done b { color: var(--stage-done); }
 
     /* ---------- Card ---------- */
     .card {
@@ -105,10 +118,9 @@
       box-shadow: var(--card-shadow);
       border: 1px solid var(--border);
       padding: 36px 34px 32px; width: 100%;
-      position: relative; overflow: visible;
+      position: relative; overflow: hidden;
       transition: background .3s, box-shadow .3s, border-color .3s;
     }
-    /* washi-tape corner accent, ties the "paper" motif to the card */
     .card::before {
       content: "";
       position: absolute; top: -14px; left: 34px;
@@ -156,6 +168,19 @@
     body.dark .theme-toggle .knob { transform: translateX(20px); }
     .theme-toggle:hover { border-color: var(--accent-ink); }
 
+    /* ---------- Views: only one visible at a time ---------- */
+    .view-container { position: relative; min-height: 280px; }
+    .view {
+      transition: opacity .4s ease, transform .4s ease;
+      opacity: 0; transform: translateY(10px);
+      display: none;
+    }
+    .view.active {
+      opacity: 1; transform: translateY(0);
+      display: block;
+    }
+
+    /* ---------- View 1: Settings ---------- */
     .field { margin-bottom: 22px; }
     label {
       display: block; font-weight: 600; font-size: 12.5px; color: var(--ink);
@@ -183,7 +208,6 @@
       -webkit-text-fill-color: var(--ink) !important;
     }
 
-    /* ---------- Mode pills styled like torn paper tabs ---------- */
     .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
     .radio-group label {
       display: flex; align-items: center; gap: 5px;
@@ -237,7 +261,120 @@
     #status::before { content: "$ "; color: var(--ink-hint); }
     #status.success::before { content: "✓ "; color: var(--status-success-border); }
 
-    .downloads { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--border); }
+    /* ---------- Views 2-4: Progress / Marker Detail / Downloads ---------- */
+
+    .mode-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+      padding: 3px 10px; border-radius: 5px;
+      background: var(--pill-active-bg); border: 1px solid var(--pill-active-border);
+      color: var(--accent-ink); margin-bottom: 14px;
+    }
+
+    .main-bar-track {
+      width: 100%; height: 18px;
+      background: var(--progress-track); border-radius: 9px;
+      overflow: hidden; margin-bottom: 8px;
+    }
+    .main-bar-fill {
+      height: 100%; width: 0%;
+      background: var(--progress-fill); border-radius: 9px;
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+    .main-bar-label {
+      display: flex; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: var(--ink-soft); margin-bottom: 16px;
+    }
+
+    .step-title {
+      font-size: 16px; font-weight: 600; color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .step-elapsed {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: var(--ink-hint); margin-bottom: 16px;
+    }
+
+    /* ---- Step checklist ---- */
+    .checklist { list-style: none; margin-top: 14px; }
+    .checklist li {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; font-size: 13px; color: var(--ink-soft);
+      border-bottom: 1px solid var(--border);
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist .icon { width: 20px; text-align: center; font-size: 14px; }
+    .checklist .icon.done { color: var(--stage-done); }
+    .checklist .icon.current { color: var(--stage-current); }
+    .checklist .icon.pending { color: var(--stage-pending); }
+    .checklist .label { flex: 1; }
+    .checklist .label.current { color: var(--ink); font-weight: 600; }
+    .checklist .label.current::after {
+      content: " ●"; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .3; }
+    }
+
+    /* ---- Marker stage pills ---- */
+    .stages-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0;
+    }
+    .stage-pill {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 7px;
+      font-size: 12px; font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--pill-bg); color: var(--ink-hint);
+      transition: all .3s;
+    }
+    .stage-pill.done { border-color: var(--stage-done); color: var(--stage-done); background: var(--status-success-bg); }
+    .stage-pill.current { border-color: var(--stage-current); color: var(--ink); background: var(--pill-active-bg); animation: pill-pop .4s ease; }
+    @keyframes pill-pop {
+      0% { transform: scale(0.92); }
+      100% { transform: scale(1); }
+    }
+    .stage-pill .sp-progress { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-hint); }
+
+    /* ---- Sub-progress bar for current stage ---- */
+    .sub-bar-track {
+      width: 100%; height: 6px;
+      background: var(--progress-track); border-radius: 3px;
+      overflow: hidden; margin: 8px 0 4px;
+    }
+    .sub-bar-fill {
+      height: 100%; width: 0%;
+      background: var(--accent); border-radius: 3px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
+    .sub-bar-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--ink-hint); text-align: right;
+    }
+
+    /* ---- File name display ---- */
+    .file-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; border-radius: 8px;
+      background: var(--status-bg); margin-bottom: 14px;
+    }
+    .file-header .fn { font-weight: 600; font-size: 14px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-header .fn-eta { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-hint); }
+
+    /* ---- Per-file times ---- */
+    .per-file-list { list-style: none; margin-top: 12px; }
+    .per-file-list li {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; font-size: 12.5px; color: var(--ink-soft);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .per-file-list .pf-done { color: var(--stage-done); }
+    .per-file-list .pf-active { color: var(--stage-current); font-weight: 600; }
+
+    /* ---- Files list in Downloads view ---- */
+    .downloads { margin-top: 4px; }
     .downloads h3 {
       font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px;
       text-transform: uppercase; letter-spacing: .06em;
@@ -275,6 +412,8 @@
       .row { flex-direction: column; gap: 0; }
       .step-rail .step span.step-label { display: none; }
       .card { padding: 28px 20px 24px; }
+      .stages-row { gap: 5px; }
+      .stage-pill { font-size: 11px; padding: 4px 8px; }
     }
     @media (prefers-reduced-motion: reduce) {
       * { transition-duration: .001ms !important; animation-duration: .001ms !important; }
@@ -284,91 +423,176 @@
 <body>
   <div class="stage">
     <nav class="step-rail" aria-hidden="true">
-      <div class="step is-current"><b>01</b><span class="step-label">Configure</span></div>
-      <div class="step"><b>02</b><span class="step-label">Save &amp; apply</span></div>
-      <div class="step"><b>03</b><span class="step-label">Download</span></div>
+      <div class="step is-current" data-step="1"><b>01</b><span class="step-label">Configure</span></div>
+      <div class="step" data-step="2"><b>02</b><span class="step-label">Prepare</span></div>
+      <div class="step" data-step="3"><b>03</b><span class="step-label">Process</span></div>
+      <div class="step" data-step="4"><b>04</b><span class="step-label">Download</span></div>
     </nav>
 
     <div class="card">
       <div class="header">
         <div class="header-text">
           <h1><span class="mark"><span>Marker</span></span> PDF Converter</h1>
-          <p class="sub">Configure settings and click Save &amp; Apply.</p>
+          <p class="sub" id="header-sub">Configure settings and click Save &amp; Apply.</p>
         </div>
         <button class="theme-toggle" id="btn-theme" title="Toggle dark mode">
           <span class="knob">🌙</span>
         </button>
       </div>
 
-      <!-- Mode -->
-      <div class="field" data-field="mode" style="margin-top: 24px;">
-        <label>Processing Mode</label>
-        <div class="radio-group">
-          <label><input type="radio" name="mode" value="single" checked><span>Single</span></label>
-          <label><input type="radio" name="mode" value="split"><span>Split</span></label>
-          <label><input type="radio" name="mode" value="folder"><span>Folder</span></label>
+      <div class="view-container">
+        <!-- ================================================================ -->
+        <!-- VIEW 1: SETTINGS                                                 -->
+        <!-- ================================================================ -->
+        <div id="view-settings" class="view active">
+          <!-- Mode -->
+          <div class="field" data-field="mode" style="margin-top: 24px;">
+            <label>Processing Mode</label>
+            <div class="radio-group">
+              <label><input type="radio" name="mode" value="single" checked><span>Single</span></label>
+              <label><input type="radio" name="mode" value="split"><span>Split</span></label>
+              <label><input type="radio" name="mode" value="folder"><span>Folder</span></label>
+            </div>
+          </div>
+
+          <div class="row" id="row-drive-links">
+            <div class="field" data-field="drive_link" id="field-drive-link">
+              <label>Google Drive File Link</label>
+              <input type="text" id="drive_link" placeholder="https://drive.google.com/d/..." />
+            </div>
+            <div class="field" data-field="drive_folder_link" id="field-folder-link">
+              <label>Google Drive Folder Link</label>
+              <input type="text" id="drive_folder_link" placeholder="https://drive.google.com/drive/folders/..." />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field" data-field="split_at_page" id="field-split-page">
+              <label>Split at Page</label>
+              <input type="number" id="split_at_page" value="12" min="0" max="200" />
+              <div class="hint">0 = auto half (split mode only)</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field" data-field="zip_name">
+              <label>Output ZIP Name</label>
+              <input type="text" id="zip_name" value="output" />
+            </div>
+            <div class="checkbox-row" data-field="add_page_markers">
+              <input type="checkbox" id="add_page_markers" />
+              <label for="add_page_markers">Add Page Markers</label>
+            </div>
+          </div>
+
+          <div class="field" data-field="github_token" style="margin-top: 4px;">
+            <label>GitHub Token</label>
+            <input type="password" id="github_token" placeholder="ghp_... or left empty" />
+            <div class="hint">For auto-push to GitHub (Cell 9). Leave empty to skip.</div>
+          </div>
+
+          <div class="actions">
+            <button class="btn-primary" id="btn-save">Save &amp; Apply</button>
+            <button class="btn-secondary" id="btn-reset">Reset to Defaults</button>
+          </div>
+
+          <div id="status">Ready.</div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- VIEW 2: PREPARING                                                -->
+        <!-- ================================================================ -->
+        <div id="view-preparing" class="view">
+          <span class="mode-badge" id="prep-mode-badge">Single</span>
+
+          <div class="main-bar-track">
+            <div class="main-bar-fill" id="prep-bar"></div>
+          </div>
+          <div class="main-bar-label">
+            <span id="prep-pct">0%</span>
+            <span id="prep-elapsed">⏱ 0s</span>
+          </div>
+
+          <div class="step-title" id="prep-title">Config saved. Initializing...</div>
+
+          <ul class="checklist" id="prep-checklist">
+            <li><span class="icon pending">○</span><span class="label">Config saved</span></li>
+            <li><span class="icon pending">○</span><span class="label">Downloading PDF</span></li>
+            <li><span class="icon pending">○</span><span class="label">Starting Marker</span></li>
+          </ul>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- VIEW 3: MARKER DETAIL                                            -->
+        <!-- ================================================================ -->
+        <div id="view-marker" class="view">
+          <span class="mode-badge" id="marker-mode-badge">Single</span>
+
+          <div class="main-bar-track">
+            <div class="main-bar-fill" id="marker-bar"></div>
+          </div>
+          <div class="main-bar-label">
+            <span id="marker-pct">0%</span>
+            <span id="marker-elapsed">⏱ 0s</span>
+          </div>
+
+          <div class="step-title" id="marker-title">Loading models...</div>
+
+          <div class="file-header">
+            <span class="fn" id="marker-filename">doc_20260721_123456.pdf</span>
+            <span class="fn-eta" id="marker-eta">ETA: --</span>
+          </div>
+
+          <!-- Marker stages row -->
+          <div class="stages-row" id="stages-row">
+            <span class="stage-pill" data-stage="Layout"><span class="icon">○</span> Layout</span>
+            <span class="stage-pill" data-stage="OCR"><span class="icon">○</span> OCR</span>
+            <span class="stage-pill" data-stage="bboxes"><span class="icon">○</span> bboxes</span>
+            <span class="stage-pill" data-stage="Text"><span class="icon">○</span> Text</span>
+            <span class="stage-pill" data-stage="tables"><span class="icon">○</span> tables</span>
+          </div>
+
+          <!-- Sub-progress for current stage -->
+          <div style="margin-top: 6px;">
+            <div class="sub-bar-track">
+              <div class="sub-bar-fill" id="stage-sub-bar"></div>
+            </div>
+            <div class="sub-bar-label" id="stage-sub-label">0/0</div>
+          </div>
+
+          <!-- Previous file times -->
+          <ul class="per-file-list" id="per-file-list"></ul>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- VIEW 4: DOWNLOADS                                                -->
+        <!-- ================================================================ -->
+        <div id="view-downloads" class="view">
+          <span class="mode-badge" id="dl-mode-badge">Single</span>
+
+          <div class="step-title" style="font-size: 20px; margin-bottom: 4px;">✅ Complete!</div>
+          <div class="step-elapsed" id="dl-elapsed">Finished in 0s</div>
+
+          <div class="main-bar-track" style="height: 12px;">
+            <div class="main-bar-fill" id="dl-bar" style="width: 100%;"></div>
+          </div>
+          <div class="main-bar-label" style="margin-bottom: 20px;">
+            <span id="dl-pct">100%</span>
+            <span id="dl-status">Done</span>
+          </div>
+
+          <div class="downloads">
+            <h3>
+              Downloads
+              <button id="btn-refresh-files">Refresh</button>
+            </h3>
+            <ul class="file-list" id="file-list">
+              <li class="no-files">No output files yet.</li>
+            </ul>
+          </div>
         </div>
       </div>
 
-      <!-- Drive links -->
-      <div class="row" id="row-drive-links">
-        <div class="field" data-field="drive_link" id="field-drive-link">
-          <label>Google Drive File Link</label>
-          <input type="text" id="drive_link" placeholder="https://drive.google.com/d/..." />
-        </div>
-        <div class="field" data-field="drive_folder_link" id="field-folder-link">
-          <label>Google Drive Folder Link</label>
-          <input type="text" id="drive_folder_link" placeholder="https://drive.google.com/drive/folders/..." />
-        </div>
-      </div>
-
-      <!-- Split page + ZIP name -->
-      <div class="row">
-        <div class="field" data-field="split_at_page" id="field-split-page">
-          <label>Split at Page</label>
-          <input type="number" id="split_at_page" value="12" min="0" max="200" />
-          <div class="hint">0 = auto half (split mode only)</div>
-        </div>
-      </div>
-
-      <!-- ZIP name + page markers -->
-      <div class="row">
-        <div class="field" data-field="zip_name">
-          <label>Output ZIP Name</label>
-          <input type="text" id="zip_name" value="output" />
-        </div>
-        <div class="checkbox-row" data-field="add_page_markers">
-          <input type="checkbox" id="add_page_markers" />
-          <label for="add_page_markers">Add Page Markers</label>
-        </div>
-      </div>
-
-      <!-- GitHub token -->
-      <div class="field" data-field="github_token" style="margin-top: 4px;">
-        <label>GitHub Token</label>
-        <input type="password" id="github_token" placeholder="ghp_... or left empty" />
-        <div class="hint">For auto-push to GitHub (Cell 9). Leave empty to skip.</div>
-      </div>
-
-      <!-- Buttons -->
-      <div class="actions">
-        <button class="btn-primary" id="btn-save">Save &amp; Apply</button>
-        <button class="btn-secondary" id="btn-reset">Reset to Defaults</button>
-      </div>
-
-      <!-- Status -->
-      <div id="status">Ready.</div>
-
-      <!-- Downloads -->
-      <div class="downloads">
-        <h3>
-          Downloads
-          <button id="btn-refresh-files">Refresh</button>
-        </h3>
-        <ul class="file-list" id="file-list">
-          <li class="no-files">No output files yet. Run the notebook to generate them.</li>
-        </ul>
-      </div>
     </div>
 
     <footer class="note">marker · pdf → markdown, split, and ship</footer>
@@ -390,7 +614,198 @@
     });
 
     // ============================================================
-    // Show/hide fields based on mode
+    // View switching
+    // ============================================================
+    const VIEWS = ["settings", "preparing", "marker", "downloads"];
+
+    function switchView(viewId) {
+      document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
+      const target = document.getElementById("view-" + viewId);
+      if (target) target.classList.add("active");
+
+      // Update step rail
+      const idx = VIEWS.indexOf(viewId);
+      document.querySelectorAll(".step-rail .step").forEach((el, i) => {
+        el.classList.toggle("is-current", i === idx);
+        el.classList.toggle("is-done", i < idx);
+      });
+
+      // Update header subtitle
+      document.getElementById("header-sub").textContent =
+        viewId === "settings" ? "Configure settings and click Save &amp; Apply." :
+        viewId === "downloads" ? "Your files are ready." :
+        "Processing in progress...";
+    }
+
+    // ============================================================
+    // Status polling
+    // ============================================================
+    async function pollStatus() {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        renderStatus(data);
+      } catch (e) {
+        // Server not reachable — stay on settings
+      }
+    }
+
+    function renderStatus(data) {
+      const view = data.view || "settings";
+      const pct = Math.round((data.progress || 0) * 100);
+      const elapsed = data.elapsed || 0;
+      const mode = data.mode || "single";
+
+      switchView(view);
+
+      if (view === "preparing") {
+        document.getElementById("prep-mode-badge").textContent = capitalize(mode) + " Mode";
+        document.getElementById("prep-bar").style.width = pct + "%";
+        document.getElementById("prep-pct").textContent = pct + "%";
+        document.getElementById("prep-elapsed").textContent = "⏱ " + formatTime(elapsed);
+        document.getElementById("prep-title").textContent = data.step || "";
+
+        // Update checklist
+        updateChecklist("prep-checklist", data);
+      }
+
+      if (view === "marker") {
+        document.getElementById("marker-mode-badge").textContent = capitalize(mode) + " Mode";
+        document.getElementById("marker-bar").style.width = pct + "%";
+        document.getElementById("marker-pct").textContent = pct + "%";
+        document.getElementById("marker-elapsed").textContent = "⏱ " + formatTime(elapsed);
+        document.getElementById("marker-title").textContent = data.step || "";
+        document.getElementById("marker-filename").textContent = data.current_file || "";
+        document.getElementById("marker-eta").textContent = data.stage_eta_sec ? "ETA: ~" + data.stage_eta_sec + "s" : "ETA: --";
+
+        // Update stages
+        updateStages(data);
+
+        // Update sub-bar
+        const sn = data.stage_n || 0;
+        const st = data.stage_total || 1;
+        const subPct = Math.min(100, Math.round((sn / st) * 100));
+        document.getElementById("stage-sub-bar").style.width = subPct + "%";
+        document.getElementById("stage-sub-label").textContent = sn + "/" + st;
+
+        // Per-file info
+        if (data.per_file_done) {
+          const list = document.getElementById("per-file-list");
+          const fileName = data.current_file || "";
+          const exists = Array.from(list.children).some(li => li.getAttribute("data-file") === fileName);
+          if (!exists) {
+            const li = document.createElement("li");
+            li.setAttribute("data-file", fileName);
+            li.className = "pf-done";
+            li.innerHTML = "✅ " + fileName + " — done in " + data.per_file_done + "s";
+            list.prepend(li);
+          }
+        }
+      }
+
+      if (view === "downloads") {
+        document.getElementById("dl-mode-badge").textContent = capitalize(mode) + " Mode";
+        document.getElementById("dl-bar").style.width = pct + "%";
+        document.getElementById("dl-pct").textContent = pct + "%";
+        document.getElementById("dl-elapsed").textContent = "Finished in " + formatTime(elapsed);
+        document.getElementById("dl-status").textContent = data.step || "";
+
+        // Show files if provided
+        if (data.files && data.files.length > 0) {
+          const list = document.getElementById("file-list");
+          list.innerHTML = data.files.map(f =>
+            `<li><span>${f.name} (${f.size})</span><a href="/api/download/${f.name}" download>Download</a></li>`
+          ).join("");
+        } else {
+          refreshFiles();
+        }
+      }
+    }
+
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    function formatTime(sec) {
+      if (sec < 60) return sec + "s";
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return m + ":" + String(s).padStart(2, "0");
+    }
+
+    function updateStages(data) {
+      const currentStage = data.marker_stage || "";
+      const pills = document.querySelectorAll("#stages-row .stage-pill");
+      let foundCurrent = false;
+
+      // "Complete" means all stages are done
+      if (currentStage === "Complete") {
+        pills.forEach(pill => {
+          pill.className = "stage-pill done";
+          pill.querySelector(".icon").textContent = "✅";
+          pill.querySelector(".icon").className = "icon done";
+        });
+        return;
+      }
+
+      pills.forEach(pill => {
+        const stage = pill.dataset.stage;
+        const icon = pill.querySelector(".icon");
+
+        if (stage === currentStage) {
+          foundCurrent = true;
+          pill.className = "stage-pill current";
+          icon.textContent = "▶";
+          icon.className = "icon current";
+        } else if (!foundCurrent) {
+          pill.className = "stage-pill done";
+          icon.textContent = "✅";
+          icon.className = "icon done";
+        } else {
+          pill.className = "stage-pill";
+          icon.textContent = "○";
+          icon.className = "icon pending";
+        }
+      });
+    }
+
+    function updateChecklist(listId, data) {
+      const items = document.querySelectorAll("#" + listId + " li");
+      items.forEach(li => {
+        const label = li.querySelector(".label");
+        const icon = li.querySelector(".icon");
+        icon.className = "icon pending";
+        icon.textContent = "○";
+        label.className = "label";
+      });
+
+      // Find which items are done vs current
+      // Simple heuristic: first item whose text matches a substring of the step is current
+      const step = (data.step || "").toLowerCase();
+      let foundCurrent = false;
+      items.forEach(li => {
+        const label = li.querySelector(".label");
+        const icon = li.querySelector(".icon");
+        const text = label.textContent.toLowerCase();
+
+        if (!foundCurrent && step.includes(text)) {
+          icon.textContent = "▶";
+          icon.className = "icon current";
+          label.className = "label current";
+          foundCurrent = true;
+        } else if (!foundCurrent) {
+          icon.textContent = "✅";
+          icon.className = "icon done";
+          label.className = "label";
+        } else {
+          icon.textContent = "○";
+          icon.className = "icon pending";
+          label.className = "label";
+        }
+      });
+    }
+
+    // ============================================================
+    // Settings: show/hide fields by mode
+    // ============================================================
     function updateVisibility(mode) {
       const showDrive = mode === "single" || mode === "split";
       const showFolder = mode === "folder";
@@ -406,7 +821,8 @@
     updateVisibility("single");
 
     // ============================================================
-    // API calls
+    // API calls: save / load / reset
+    // ============================================================
     const API_SAVE  = "/api/save";
     const API_LOAD  = "/api/load";
     const API_RESET = "/api/reset";
@@ -440,7 +856,6 @@
       el.className = ok ? "success" : "";
     }
 
-    // Load config on page load
     async function loadConfig() {
       try {
         const res = await fetch(API_LOAD);
@@ -449,7 +864,7 @@
           setValues(data);
           updateVisibility(data.mode || "single");
         }
-      } catch { /* defaults already set */ }
+      } catch { /* defaults */ }
     }
 
     // Save
@@ -473,7 +888,6 @@
       }
     });
 
-    // Reset
     document.getElementById("btn-reset").addEventListener("click", async () => {
       try {
         const res = await fetch(API_RESET, { method: "POST" });
@@ -488,7 +902,8 @@
     loadConfig();
 
     // ============================================================
-    // Downloads / file listing
+    // Downloads (used by view 4 and settings view)
+    // ============================================================
     const API_FILES = "/api/files";
     const DOWNLOAD_BASE = "/api/download/";
 
@@ -511,7 +926,12 @@
     }
 
     document.getElementById("btn-refresh-files").addEventListener("click", refreshFiles);
-    refreshFiles();
+
+    // ============================================================
+    // Start polling on page load
+    // ============================================================
+    pollStatus();
+    setInterval(pollStatus, 3000);
   </script>
 </body>
 </html>

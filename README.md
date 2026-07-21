@@ -18,7 +18,9 @@ Active development
 
 ## Setup / Run
 1. Add the `marker-model-cache` dataset to your Kaggle notebook
-2. Set `DRIVE_LINK` or `DRIVE_FOLDER_LINK` in Cell 5
-3. Run all cells
+2. Enable **Internet** and **GPU** in Kaggle notebook settings
+3. Set `DRIVE_LINK` or `DRIVE_FOLDER_LINK` via the config UI or in Cell 4
+4. Run all cells
+5. The config UI is accessible via the Cloudflare Tunnel URL printed by Cell 4
 
 ## Known Issues / TODO
