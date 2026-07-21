@@ -3,6 +3,8 @@
 All notable changes to this project are logged here, newest first.
 
 ## 2026-07-21
+- Fixed: Cell 1 now deletes stale `config.json`/`status.json`/`.tunnel_url` at start — wait loop always blocks for fresh config
+- Fixed: Cell 8 worker subprocess warmup block removed — `patched_create_model_dict()` was hanging during model caching; models now load on first job instead
 - Fixed: Added missing `/api/status` route to notebook's inline FastAPI server (Cell 4) — UI now shows live progress
 - Fixed: Added Docker shim to Cell 2 — marker_single checks for docker binary at startup, fails without it on Kaggle
 - Fixed: Cell 8 mode check now accepts `"single"` alongside `"default"` and `"batch_multiplier"` — matches what the UI saves
