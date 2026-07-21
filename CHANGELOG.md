@@ -3,6 +3,11 @@
 All notable changes to this project are logged here, newest first.
 
 ## 2026-07-21
+- Fixed: Added missing `/api/status` route to notebook's inline FastAPI server (Cell 4) — UI now shows live progress
+- Fixed: Added Docker shim to Cell 2 — marker_single checks for docker binary at startup, fails without it on Kaggle
+- Fixed: Cell 8 mode check now accepts `"single"` alongside `"default"` and `"batch_multiplier"` — matches what the UI saves
+
+## 2026-07-21
 - Added: Zero-intervention flow — Cell 4 now saves tunnel URL to `.tunnel_url`; Cell 5 waits in a loop until user configures a valid Drive link via the UI, then auto-proceeds
 - Changed: Cell 5 wait loop reads saved tunnel URL and re-displays it; no need to run cells in two batches
 
